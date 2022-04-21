@@ -1,0 +1,28 @@
+---
+kind: pipeline
+name: test
+steps:
+  - name: test
+    image: golang:1.18rc1-alpine3.15
+    commands:
+      - apk add build-base redis
+      - redis-server &
+      - go test
+  - name: notify
+    image: plugins/slack
+    settings:
+      username: Grocery CI
+      icon_emoji: ":shopping_trolley:"
+      channel: rd-bots
+      template: >
+        {{#success build.status}}
+          Build {{build.number}} for ${DRONE_BRANCH} on ${DRONE_REPO} succeeded! :party-gopher:
+        {{else}}
+          Build {{build.number}} for ${DRONE_BRANCH} on ${DRONE_REPO} failed! :doh:
+        {{/success}}
+      webhook:
+        from_secret: slack_webhook
+    when:
+      branch: main
+      status: [success, failure]
+      event: push

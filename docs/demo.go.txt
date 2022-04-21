@@ -1,0 +1,71 @@
+// Code used in the video demo
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/fatih/color"
+	"github.com/go-redis/redis/v8"
+	"github.com/nytimes/grocery"
+)
+
+type Item struct {
+	grocery.Base
+	Name  string
+	Price float64
+}
+
+func readLine() string {
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+	return strings.Replace(text, "\n", "", -1)
+}
+
+func delay_print(s string, c *color.Color) {
+	for _, char := range s {
+		c.Print(string(char))
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+func main() {
+	magenta := color.New(color.Bold).Add(color.FgHiMagenta)
+	red := color.New(color.Bold).Add(color.FgHiRed)
+	cyan := color.New(color.Bold).Add(color.FgHiCyan)
+	reset := color.New(color.Reset)
+
+	delay_print("Grocery", magenta)
+	delay_print(" is a framework for simple object storage with ", reset)
+	delay_print("Redis", red)
+	delay_print(" in ", reset)
+	delay_print("Go", cyan)
+	delay_print(".\n\nLet’s use it to store an item in our inventory:\n", reset)
+
+	grocery.Init(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	fmt.Print("Item name: ")
+	name := readLine()
+
+	fmt.Print("Item price: ")
+	price, _ := strconv.ParseFloat(readLine(), 64)
+
+	item := &Item{
+		Name:  name,
+		Price: price,
+	}
+
+	id, err := grocery.Store(item)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Stored at item:%s\n", id)
+}
