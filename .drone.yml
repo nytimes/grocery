@@ -16,9 +16,9 @@ steps:
       channel: rd-bots
       template: >
         {{#success build.status}}
-          Build {{build.number}} for ${DRONE_BRANCH} on ${DRONE_REPO} succeeded! :party-gopher:
+          Build {{build.number}} for ${DRONE_BRANCH} on ${DRONE_REPO} succeeded! :party-gopher: {{build.link}}
         {{else}}
-          Build {{build.number}} for ${DRONE_BRANCH} on ${DRONE_REPO} failed! :doh:
+          Build {{build.number}} for ${DRONE_BRANCH} on ${DRONE_REPO} failed! :doh: {{build.link}}
         {{/success}}
       webhook:
         from_secret: slack_webhook
