@@ -154,6 +154,8 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 					return fmt.Errorf("Can't set unknown array item in %s", tagName)
 				}
 			}
+		case reflect.Map:
+			return fmt.Errorf("Type of field '%s' must be changed to *grocery.Map", tagName)
 		case reflect.Struct:
 			switch structField.Type() {
 			case reflect.TypeOf(time.Now()):
