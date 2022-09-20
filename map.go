@@ -72,7 +72,7 @@ type CustomMapType interface {
 	Setup()
 }
 
-func newMap(data map[string]string) *Map {
+func NewMap(data map[string]string) *Map {
 	m := &Map{Map: sync.Map{}}
 
 	for k, v := range data {

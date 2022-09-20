@@ -52,7 +52,7 @@ func TestSetZeroValues(t *testing.T) {
 
 	// Update 2
 	m.StringVal = ""
-	err = UpdateWithOptions(id, m, &UpdateOptions{
+	UpdateWithOptions(id, m, &UpdateOptions{
 		SetZeroValues: true,
 	})
 

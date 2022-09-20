@@ -34,8 +34,8 @@ func TestLoad(t *testing.T) {
 		Float32Val:     3.5,
 		Float64Val:     3.9,
 		StringAliasVal: "asdf",
-		MapVal:         newMap(mapData),
-		SetVal:         newSet(setData),
+		MapVal:         NewMap(mapData),
+		SetVal:         NewSet(setData),
 	}
 
 	id, err := Store(model)
@@ -127,7 +127,7 @@ func TestLoadAll(t *testing.T) {
 		IntVal:         4,
 		BoolVal:        true,
 		StringAliasVal: "asdf",
-		MapVal:         newMap(map[string]string{"a": "b", "c": "d"}),
+		MapVal:         NewMap(map[string]string{"a": "b", "c": "d"}),
 	}
 
 	id, err := Store(model)

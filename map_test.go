@@ -7,7 +7,7 @@ import (
 
 func TestMap(t *testing.T) {
 	mapData := map[string]string{"a": "b", "c": "d"}
-	m := newMap(mapData)
+	m := NewMap(mapData)
 
 	m.Map.Range(func(key, value interface{}) bool {
 		loadedValue, ok := mapData[key.(string)]

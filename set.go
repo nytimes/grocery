@@ -49,7 +49,7 @@ type CustomSetType interface {
 	Setup()
 }
 
-func newSet(data []string) *Set {
+func NewSet(data []string) *Set {
 	s := &Set{Map: sync.Map{}}
 
 	for _, k := range data {
