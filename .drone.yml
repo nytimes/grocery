@@ -3,7 +3,7 @@ kind: pipeline
 name: test
 steps:
   - name: test
-    image: golang:1.18rc1-alpine3.15
+    image: golang:1.18-alpine
     commands:
       - apk add build-base redis
       - redis-server &
