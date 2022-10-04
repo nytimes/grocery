@@ -8,6 +8,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+const (
+	// Redis channel to send a test message on during initialization.
+	firstMessageChannel = "grocery_hello_world"
+)
+
 var (
 	// The underlying Redis client powering grocery. Use this field to run your
 	// own Redis commands.
@@ -22,15 +27,6 @@ var (
 	// Handler synchronization.
 	handlersMux sync.RWMutex
 
-	// Redis channel to send a test message on during initialization.
-	firstMessageChannel = "hello_world"
-
-	// Channel used as a signal to indicate PSubscribe is ready.
-	firstMessageSignal = make(chan bool)
-
-	// Set to true when the first message goes through pub/sub successfully.
-	receivedFirstMessage = false
-
 	// Persistent pubsub connection that waits for published events.
 	psc *redis.PubSub
 )
@@ -43,27 +39,29 @@ func Init(config *redis.Options) error {
 		return err
 	}
 
-	go listenForUpdates()
+	// Wait until PSubscribe receives its first message to return
+	firstMessageSignal := make(chan bool)
+	go listenForUpdates(firstMessageSignal)
 
-	// Repeatedly send messages while we wait for listenForUpdates to start
-	// listening
-	go func() {
-		for range time.Tick(time.Millisecond * 10) {
-			if receivedFirstMessage {
-				return
-			}
+	ticker := time.NewTicker(time.Millisecond * 10)
+	defer ticker.Stop()
 
+	for {
+		select {
+		case <-firstMessageSignal:
+			// Wait until we can confirm listenForUpdates is working before returning
+			close(firstMessageSignal)
+			return nil
+		case <-ticker.C:
+			// Repeatedly send messages while we wait for listenForUpdates to
+			// start listening
 			C.Publish(ctx, firstMessageChannel, "")
 		}
-	}()
-
-	// Wait until we can confirm listenForUpdates is working before returning
-	<-firstMessageSignal
-
-	return nil
+	}
 }
 
-func listenForUpdates() {
+func listenForUpdates(firstMessageSignal chan bool) {
+	receivedFirstMessage := false
 	psc = C.PSubscribe(ctx, "*")
 
 	for {
@@ -100,11 +98,11 @@ func listenForUpdates() {
 // connection. For example, if you want to listen to events on the 'reset'
 // channel, and then publish a test event, you might do the following:
 //
-//  db.Subscribe([]string{"reset"}, func(channel string, payload []byte) {
-//      fmt.Println("receiving data from " + channel)
-//  })
+//	db.Subscribe([]string{"reset"}, func(channel string, payload []byte) {
+//	    fmt.Println("receiving data from " + channel)
+//	})
 //
-//  db.C.Publish("reset", "payload")
+//	db.C.Publish("reset", "payload")
 func Subscribe(channels []string, handler func(string, []byte)) {
 	handlersMux.Lock()
 	defer handlersMux.Unlock()
