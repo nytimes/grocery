@@ -13,6 +13,10 @@ import (
 // UpdateOptions provides options that may be passed to UpdateWithOptions if
 // the default behavior of Update needs to be changed.
 type UpdateOptions struct {
+	// Notify should be set to true if you would like a message to be published
+	// to the <struct name>:<id> channel once this update completes.
+	Notify bool
+
 	// SetZeroValues should be set to true if you would like to update all zero
 	// values in Redis (e.g. empty strings, 0 ints). By default, when creating
 	// a struct to pass to Update, you may not set each value, which is why
@@ -209,6 +213,11 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 		if hook, ok := ptr.(ModelHook); ok {
 			hook.PostStore(pip)
 		}
+	}
+
+	if opts.Notify {
+		// Publish message if notify is enabled
+		pip.Publish(ctx, prefix+":"+id, "")
 	}
 
 	// Don't exec if a pipeline was provided to us
