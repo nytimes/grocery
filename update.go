@@ -31,19 +31,19 @@ type UpdateOptions struct {
 // Update updates an object with a given ID. By default, only non-zero values
 // are updated in Redis, allowing you to update one property at a time.
 //
-//  type Item struct {
-//      grocery.Base
-//      Name string
-//      Price float64
-//  }
+//	type Item struct {
+//	    grocery.Base
+//	    Name string
+//	    Price float64
+//	}
 //
-//  item := &Item{
-//      Price: 5.64,
-//  }
+//	item := &Item{
+//	    Price: 5.64,
+//	}
 //
-//  // Name is not updated, but price is
-//  itemID := "asdf"
-//  db.Update(itemID, item)
+//	// Name is not updated, but price is
+//	itemID := "asdf"
+//	db.Update(itemID, item)
 func Update(id string, ptr interface{}) error {
 	return updateInternal(id, ptr, &UpdateOptions{})
 }
@@ -143,7 +143,7 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 				val := structField.Elem().FieldByName("Base").FieldByName("ID").String()
 				pip.HSet(ctx, prefix+":"+id, k, val)
 			} else {
-				return fmt.Errorf("Can't set unknown field '%s'", tagName)
+				return fmt.Errorf("can't set unknown field '%s'", tagName)
 			}
 		case reflect.Slice:
 			for i := 0; i < structField.Len(); i++ {
@@ -151,18 +151,18 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 					itemID := structField.Index(i).Elem().FieldByName("Base").FieldByName("ID").String()
 					pip.RPush(ctx, prefix+":"+id+":"+k, itemID)
 				} else {
-					return fmt.Errorf("Can't set unknown array item in %s", tagName)
+					return fmt.Errorf("can't set unknown array item in %s", tagName)
 				}
 			}
 		case reflect.Map:
-			return fmt.Errorf("Type of field '%s' must be changed to *grocery.Map", tagName)
+			return fmt.Errorf("type of field '%s' must be changed to *grocery.Map", tagName)
 		case reflect.Struct:
 			switch structField.Type() {
 			case reflect.TypeOf(time.Now()):
 				timeVal := structField.MethodByName("Unix").Call([]reflect.Value{})[0].Int()
 				pip.HSet(ctx, prefix+":"+id, k, timeVal)
 			default:
-				return fmt.Errorf("Can't set unknown struct for field '%s'", tagName)
+				return fmt.Errorf("can't set unknown struct for field '%s'", tagName)
 			}
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			// Handle int alias types
@@ -188,9 +188,9 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 				continue
 			}
 
-			return fmt.Errorf("Don't know how to set interface field '%s'", k)
+			return fmt.Errorf("don't know how to set interface field '%s'", k)
 		default:
-			return fmt.Errorf("Don't know how to set field '%s'", k)
+			return fmt.Errorf("don't know how to set field '%s'", k)
 		}
 	}
 

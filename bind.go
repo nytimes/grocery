@@ -181,7 +181,7 @@ func bindStruct(prefix, id string, data map[string]string, typ reflect.Type, val
 
 					arr = reflect.Append(arr, ptr)
 				} else {
-					return errors.New("Can't set unsupported struct")
+					return errors.New("can't set unsupported struct")
 				}
 			}
 
