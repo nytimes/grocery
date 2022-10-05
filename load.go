@@ -12,24 +12,24 @@ import (
 // struct, and then setting base attributes (such as ID). See Store for more
 // information on creating structs for grocery. Load can be used like so:
 //
-//  type Item struct {
-//      grocery.Base
-//      Name string `grocery:"name"`
-//  }
+//	type Item struct {
+//	    grocery.Base
+//	    Name string `grocery:"name"`
+//	}
 //
-//  itemID := "asdf"
-//  item := new(Item)
-//  db.Load(itemID, item)
+//	itemID := "asdf"
+//	item := new(Item)
+//	db.Load(itemID, item)
 func Load(id string, ptr interface{}) error {
 	if reflect.TypeOf(ptr).Kind() != reflect.Ptr || reflect.TypeOf(ptr).Elem().Kind() != reflect.Struct {
 		return errors.New("ptr must be a struct pointer")
 	}
 
-	// Get prefix for the struct (e.g. 'answer:' from Answer)
+	// Get prefix for the struct (e.g. 'item:' from Item)
 	prefix := strings.ToLower(reflect.TypeOf(ptr).Elem().Name())
 
 	// Load object data
-	res, _ := C.HGetAll(ctx, prefix + ":" + id).Result()
+	res, _ := C.HGetAll(ctx, prefix+":"+id).Result()
 
 	if err := bind(prefix, id, res, ptr); err != nil {
 		return err
@@ -38,7 +38,10 @@ func Load(id string, ptr interface{}) error {
 	// Set the ID before returning
 	val := reflect.ValueOf(ptr)
 	fi := reflect.Indirect(val).FieldByName("ID")
-	fi.SetString(id)
+
+	if fi.String() != id {
+		fi.SetString(id)
+	}
 
 	// Call post-load hook
 	postLoad := reflect.ValueOf(ptr).MethodByName("PostLoad")
@@ -61,7 +64,7 @@ func LoadAll[T any](ids []string, values *[]T) error {
 		return errors.New("len(ids) must be greater than zero")
 	}
 
-	// Get prefix for the struct (e.g. 'answer:' from Answer)
+	// Get prefix for the struct (e.g. 'item:' from Item)
 	prefix := strings.ToLower(reflect.ValueOf(values).Elem().Index(0).Type().Name())
 
 	// Pipeline all HGetAll commands
@@ -69,7 +72,7 @@ func LoadAll[T any](ids []string, values *[]T) error {
 	cmds := make([]*redis.StringStringMapCmd, len(ids))
 
 	for i, id := range ids {
-		cmds[i] = pip.HGetAll(ctx, prefix + ":" + id)
+		cmds[i] = pip.HGetAll(ctx, prefix+":"+id)
 	}
 
 	pip.Exec(ctx)
@@ -85,7 +88,10 @@ func LoadAll[T any](ids []string, values *[]T) error {
 		// Set ID
 		val := reflect.ValueOf(itemPtr).Elem()
 		fi := reflect.Indirect(val).FieldByName("ID")
-		fi.SetString(ids[i])
+
+		if fi.String() != ids[i] {
+			fi.SetString(ids[i])
+		}
 
 		// Call post-load hook
 		postLoad := reflect.ValueOf(itemPtr).MethodByName("PostLoad")

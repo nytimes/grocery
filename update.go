@@ -204,7 +204,10 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 	if opts.isStore {
 		// Set ID
 		fi := reflect.Indirect(val).FieldByName("ID")
-		fi.SetString(id)
+
+		if fi.String() != id {
+			fi.SetString(id)
+		}
 
 		// Set createdAt timestamp
 		pip.HSet(ctx, prefix+":"+id, "createdAt", time.Now().Unix())

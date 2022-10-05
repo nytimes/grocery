@@ -126,7 +126,10 @@ func bindStruct(prefix, id string, data map[string]string, typ reflect.Type, val
 					// Set ID
 					val := res.Elem()
 					fi := reflect.Indirect(val).FieldByName("ID")
-					fi.SetString(id)
+
+					if fi.String() != id {
+						fi.SetString(id)
+					}
 
 					structField.Set(res)
 				} else {
@@ -177,7 +180,10 @@ func bindStruct(prefix, id string, data map[string]string, typ reflect.Type, val
 					// Set ID
 					val := ptr.Elem()
 					fi := reflect.Indirect(val).FieldByName("ID")
-					fi.SetString(itemID)
+
+					if fi.String() != itemID {
+						fi.SetString(itemID)
+					}
 
 					arr = reflect.Append(arr, ptr)
 				} else {
@@ -265,7 +271,13 @@ func setFieldWithKind(valueKind reflect.Kind, val string, structField reflect.Va
 	case reflect.Struct:
 		switch structField.Type() {
 		case reflect.TypeOf(time.Now()):
-			timeInt, _ := strconv.Atoi(val)
+			timeInt, _ := strconv.ParseInt(val, 10, 64)
+			existingTimeInt := structField.MethodByName("Unix").Call([]reflect.Value{})[0].Int()
+
+			if existingTimeInt == timeInt {
+				return nil
+			}
+
 			timeVal := time.Unix(int64(timeInt), 0)
 			structField.Set(reflect.ValueOf(timeVal))
 		default:
@@ -289,7 +301,10 @@ func setIntField(value string, bitSize int, field reflect.Value) error {
 		return err
 	}
 
-	field.SetInt(val)
+	if val != field.Int() {
+		field.SetInt(val)
+	}
+
 	return nil
 }
 
@@ -304,7 +319,10 @@ func setUintField(value string, bitSize int, field reflect.Value) error {
 		return err
 	}
 
-	field.SetUint(val)
+	if val != field.Uint() {
+		field.SetUint(val)
+	}
+
 	return nil
 }
 
@@ -319,7 +337,10 @@ func setBoolField(value string, field reflect.Value) error {
 		return err
 	}
 
-	field.SetBool(val)
+	if val != field.Bool() {
+		field.SetBool(val)
+	}
+
 	return nil
 }
 
@@ -334,6 +355,9 @@ func setFloatField(value string, bitSize int, field reflect.Value) error {
 		return err
 	}
 
-	field.SetFloat(val)
+	if val != field.Float() {
+		field.SetFloat(val)
+	}
+
 	return nil
 }
