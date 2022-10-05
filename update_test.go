@@ -82,7 +82,7 @@ func TestSetTimeValue(t *testing.T) {
 		t.Error(err)
 	}
 
-	if m.TimeVal.Sub(model.TimeVal).Abs() > time.Second {
+	if m.TimeVal.Before(model.TimeVal) || m.TimeVal.Sub(model.TimeVal) > time.Second {
 		t.Errorf("TestSetTimeValue FAILED, initial value was not set correctly")
 	}
 }
