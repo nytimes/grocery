@@ -32,6 +32,7 @@ func TestStoreReference(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	loadedB := new(B)
@@ -59,6 +60,7 @@ func TestStoreListReference(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	loadedC := new(Ctest)

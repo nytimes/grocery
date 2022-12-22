@@ -58,16 +58,30 @@ func UpdateWithOptions(id string, ptr interface{}, opts *UpdateOptions) error {
 }
 
 func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
-	if reflect.TypeOf(ptr).Kind() != reflect.Ptr || reflect.TypeOf(ptr).Elem().Kind() != reflect.Struct {
-		return errors.New("ptr must be a struct pointer")
-	}
-
 	if id == "" {
 		return errors.New("ID must not be empty")
 	}
 
+	var val reflect.Value
+	var typ reflect.Type
+
+	switch reflect.TypeOf(ptr).Kind() {
+	case reflect.Ptr:
+		if reflect.TypeOf(ptr).Elem().Kind() != reflect.Struct {
+			return errors.New("ptr must be a struct pointer")
+		}
+
+		val = reflect.ValueOf(ptr).Elem()
+		typ = reflect.TypeOf(ptr).Elem()
+	case reflect.Struct:
+		val = reflect.ValueOf(ptr)
+		typ = reflect.TypeOf(ptr)
+	default:
+		return errors.New("ptr must be a struct pointer")
+	}
+
 	// Get prefix for the struct (e.g. 'answer:' from Answer)
-	prefix := strings.ToLower(reflect.TypeOf(ptr).Elem().Name())
+	prefix := strings.ToLower(typ.Name())
 
 	// Make sure the object exists on an update, or not on a store
 	exists, _ := C.Exists(ctx, prefix+":"+id).Result()
@@ -78,8 +92,6 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 		return fmt.Errorf("%s:%s does not exist", prefix, id)
 	}
 
-	val := reflect.ValueOf(ptr).Elem()
-	typ := val.Type()
 	pip := opts.Pipeline
 
 	if opts.Pipeline == nil {
@@ -202,13 +214,6 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 	pip.HSet(ctx, prefix+":"+id, "updatedAt", time.Now().Unix())
 
 	if opts.isStore {
-		// Set ID
-		fi := reflect.Indirect(val).FieldByName("ID")
-
-		if fi.String() != id {
-			fi.SetString(id)
-		}
-
 		// Set createdAt timestamp
 		pip.HSet(ctx, prefix+":"+id, "createdAt", time.Now().Unix())
 
@@ -226,10 +231,6 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 	// Don't exec if a pipeline was provided to us
 	if opts.Pipeline == nil {
 		if _, err := pip.Exec(ctx); err != nil {
-			return err
-		}
-
-		if err := Load(id, ptr); err != nil {
 			return err
 		}
 	}

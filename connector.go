@@ -63,20 +63,14 @@ func Init(config *redis.Options) error {
 func listenForUpdates(firstMessageSignal chan bool) {
 	receivedFirstMessage := false
 	psc = C.PSubscribe(ctx, "*")
+	ch := psc.Channel()
 
-	for {
-		msg, err := psc.ReceiveMessage(ctx)
-
+	for msg := range ch {
 		if !receivedFirstMessage && msg.Channel == firstMessageChannel {
 			// Send signal on first message to confirm PSubscribe is ready
 			firstMessageSignal <- true
 			receivedFirstMessage = true
 			continue
-		}
-
-		if err != nil {
-			// Panic if we disconnect from Redis
-			panic("Disconnected from redis")
 		}
 
 		handlersMux.RLock()
