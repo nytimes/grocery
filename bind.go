@@ -132,6 +132,13 @@ func bindStruct(prefix, id string, data map[string]string, typ reflect.Type, val
 					}
 
 					structField.Set(res)
+
+					// Call post-load hook
+					postLoad := res.MethodByName("PostLoad")
+
+					if postLoad.IsValid() {
+						postLoad.Call([]reflect.Value{})
+					}
 				} else {
 					return errors.New("Can't set unsupported struct with key " + inputFieldName)
 				}
