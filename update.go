@@ -162,6 +162,9 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 				return fmt.Errorf("can't set unknown field '%s'", tagName)
 			}
 		case reflect.Slice:
+			// Delete old list before adding new entries
+			pip.Del(ctx, prefix+":"+id+":"+k)
+
 			for i := 0; i < structField.Len(); i++ {
 				if !structField.Index(i).Elem().FieldByName("Base").IsZero() {
 					itemID := structField.Index(i).Elem().FieldByName("Base").FieldByName("ID").String()
