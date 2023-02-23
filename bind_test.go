@@ -213,6 +213,25 @@ func TestCustomMapType(t *testing.T) {
 	}
 }
 
+func TestUnexported(t *testing.T) {
+	data := map[string]string{
+		"us": "unexported",
+	}
+
+	ptr := new(bindTestStruct)
+	err := bind("", "", data, ptr)
+
+	if err != nil {
+		t.Errorf("unexported FAILED, got error %v", err)
+	}
+
+	if ptr.unexported == "" {
+		t.Log("unexported PASSED")
+	} else {
+		t.Errorf("unexported FAILED, expected %v but got %v", "", ptr.unexported)
+	}
+}
+
 func TestTimestamp(t *testing.T) {
 	data := map[string]string{
 		"t": "963210120",

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // Load automates the process of loading data from Redis, binding it to a
@@ -69,7 +69,7 @@ func LoadAll[T any](ids []string, values *[]T) error {
 
 	// Pipeline all HGetAll commands
 	pip := C.Pipeline()
-	cmds := make([]*redis.StringStringMapCmd, len(ids))
+	cmds := make([]*redis.MapStringStringCmd, len(ids))
 
 	for i, id := range ids {
 		cmds[i] = pip.HGetAll(ctx, prefix+":"+id)

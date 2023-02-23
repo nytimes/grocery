@@ -2,10 +2,11 @@ package grocery
 
 import (
 	"context"
+	"net"
 	"os"
 	"testing"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 var keys = map[string]bool{}
@@ -38,23 +39,33 @@ func TestMain(m *testing.M) {
 // Hooks used to save keys stored during tests so we can delete them once tests complete
 type testHook struct{}
 
-func (testHook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
-	return ctx, nil
-}
-
-func (testHook) AfterProcess(ctx context.Context, cmd redis.Cmder) error {
-	keys[cmd.Args()[1].(string)] = true
-	return nil
-}
-
-func (testHook) BeforeProcessPipeline(ctx context.Context, cmds []redis.Cmder) (context.Context, error) {
-	return ctx, nil
-}
-
-func (testHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmder) error {
-	for _, cmd := range cmds {
-		keys[cmd.Args()[1].(string)] = true
+func (testHook) DialHook(next redis.DialHook) redis.DialHook {
+	return func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return next(ctx, network, addr)
 	}
+}
 
-	return nil
+func (testHook) ProcessHook(next redis.ProcessHook) redis.ProcessHook {
+	return func(ctx context.Context, cmd redis.Cmder) error {
+		if err := next(ctx, cmd); err != nil {
+			return err
+		}
+
+		keys[cmd.Args()[1].(string)] = true
+		return nil
+	}
+}
+
+func (testHook) ProcessPipelineHook(next redis.ProcessPipelineHook) redis.ProcessPipelineHook {
+	return func(ctx context.Context, cmds []redis.Cmder) error {
+		if err := next(ctx, cmds); err != nil {
+			return err
+		}
+
+		for _, cmd := range cmds {
+			keys[cmd.Args()[1].(string)] = true
+		}
+
+		return nil
+	}
 }

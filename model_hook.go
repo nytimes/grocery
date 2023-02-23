@@ -1,6 +1,6 @@
 package grocery
 
-import "github.com/go-redis/redis/v8"
+import "github.com/redis/go-redis/v9"
 
 // ModelHook provides hooks that structs may implement if you would like to
 // receive callbacks on certain events.

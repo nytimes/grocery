@@ -3,7 +3,7 @@ package grocery
 import (
 	"testing"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type ZContains bool
@@ -36,7 +36,7 @@ func TestZContains(t *testing.T) {
 		t.Error(err)
 	}
 
-	C.ZAdd(ctx, "sortedSetTest", &redis.Z{Score: 1, Member: id}).Result()
+	C.ZAdd(ctx, "sortedSetTest", redis.Z{Score: 1, Member: id}).Result()
 
 	loadedModel := new(ZContainsTestModel)
 	err = Load(id, loadedModel)
