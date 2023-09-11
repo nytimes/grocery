@@ -29,9 +29,11 @@ func Load(id string, ptr interface{}) error {
 	prefix := strings.ToLower(reflect.TypeOf(ptr).Elem().Name())
 
 	// Load object data
-	res, _ := C.HGetAll(ctx, prefix+":"+id).Result()
+	res, err := C.HGetAll(ctx, prefix+":"+id).Result()
 
-	if err := bind(prefix, id, res, ptr); err != nil {
+	if err != nil {
+		return err
+	} else if err := bind(prefix, id, res, ptr); err != nil {
 		return err
 	}
 
