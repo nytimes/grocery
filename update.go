@@ -95,7 +95,7 @@ func updateInternal(id string, ptr interface{}, opts *UpdateOptions) error {
 	pip := opts.Pipeline
 
 	if opts.Pipeline == nil {
-		pip = C.Pipeline()
+		pip = C.TxPipeline()
 	}
 
 	for i := 0; i < typ.NumField(); i++ {

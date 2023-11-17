@@ -63,7 +63,9 @@ func (testHook) ProcessPipelineHook(next redis.ProcessPipelineHook) redis.Proces
 		}
 
 		for _, cmd := range cmds {
-			keys[cmd.Args()[1].(string)] = true
+			if len(cmd.Args()) >= 2 {
+				keys[cmd.Args()[1].(string)] = true
+			}
 		}
 
 		return nil
